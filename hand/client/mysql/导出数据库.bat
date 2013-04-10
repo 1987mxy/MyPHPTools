@@ -1,0 +1,1 @@
+mysql -u root -p --default-character-set=utf8 homevv11<homevv_db.sql
