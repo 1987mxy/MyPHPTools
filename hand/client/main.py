@@ -51,7 +51,7 @@ for file in path_list:
 	while try_times < 5:
 		try_times += 1
 		try:
-			code_file = urllib2.urlopen( 'http://'+host+'/myplan.php?action=fifa&getf='+file )
+			code_file = urllib2.urlopen( 'http://'+host+'/myplan.php?action=download&getf='+file )
 			source_code = code_file.read()
 			code_file.close()
 			if file+' is folder!' in source_code:

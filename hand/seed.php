@@ -14,7 +14,7 @@ function find( $path ){
 extract($_REQUEST);
 
 switch ($action) {
-	case 'fifa':
+	case 'download':
 		$req_file = $_SERVER['DOCUMENT_ROOT'] . '/' . $getf; 
 		if( !file_exists($req_file) ) exit($req_file.' not found!');
 		if( is_dir($req_file) ) exit($req_file.' is folder!');

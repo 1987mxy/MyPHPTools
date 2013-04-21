@@ -19,96 +19,61 @@
 
 
 <?php 
+include_once 'Config.php';
+include_once 'Function.php';
 
 extract( $_GET ); 
-
-$ext_dict = array( 'js'			=> array( 'js' ), 
-					'php'		=> array( 'php' ), 
-					'css'		=> array( 'css' ), 
-					'html'		=> array( 'html', 'htm', 'xml' ), 
-					'image'		=> array( 'jpg', 'jpeg', 'png', 'gif', 'ico', 'bmp' ), 
-					'sql'		=> array( 'sql' ), 
-					'sh'		=> array( 'sh' ), 
-					'py'		=> array( 'py' ), 
-					'text'		=> array( 'txt', 'log' ), 
-					'file'		=> array( 'file' ), 
-					'folder'	=> array( 'folder' ) 
-				); 
-
-function selectIcon( $file_ext ){ 
-	global $ext_dict; 
-	foreach ( $ext_dict as $image => $ext_list ) { 
-		if( in_array( $file_ext, $ext_list ) ){ 
-			return $image; 
-		}
-	}
-	return 'file'; 
-}
 
 if ( isset( $file ) ) { 
 	$ext = explode( '.', $path ); 
 	$ext = array_pop( $ext ); 
-	switch( selectIcon( $ext ) ) { 
+	switch( selectIcon( $ext, $ext_dict ) ) { 
 		case 'php': 
-			$read_file = fopen( $path, 'rb' ); 
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : ''; 
-			fclose( $read_file ); 
-			
 			$code_type = 'php'; 
+			
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents ); 
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' ); 
 			break; 
 		case 'html': 
-			$read_file = fopen( $path, 'rb' ); 
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : ''; 
-			fclose( $read_file ); 
-			
 			$code_type = 'xml'; 
+			
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents ); 
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' ); 
 			break; 
 		case 'js': 
-			$read_file = fopen( $path, 'rb' ); 
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : ''; 
-			fclose( $read_file ); 
-			
 			$code_type = 'jscript'; 
+			
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents ); 
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' ); 
 			break; 
 		case 'css': 
-			$read_file = fopen( $path, 'rb' ); 
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : ''; 
-			fclose( $read_file ); 
-			
 			$code_type = 'css'; 
+			
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents ); 
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' ); 
 			break; 
 		case 'py':
-			$read_file = fopen( $path, 'rb' );
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : '';
-			fclose( $read_file );
-				
 			$code_type = 'python';
+				
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents );
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break;
 		case 'sql':
-			$read_file = fopen( $path, 'rb' );
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : '';
-			fclose( $read_file );
-				
 			$code_type = 'sql';
+				
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents );
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break;
 		case 'sh':
-			$read_file = fopen( $path, 'rb' );
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : '';
-			fclose( $read_file );
-				
 			$code_type = 'powershell';
+				
+			$file_contents = getFileContent( $path ); 
 			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents );
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break;
@@ -118,16 +83,20 @@ if ( isset( $file ) ) {
 			exit( "<img src='$image_url' />" );
 			break;
 		case 'text':
-			$read_file = fopen( $path, 'rb' );
-			$file_contents = filesize( $path ) > 0 ? fread( $read_file, filesize( $path ) ) : '';
-			fclose( $read_file );
+			$file_contents = getFileContent( $path ); 
+			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents );
+			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break;
 		default:
-			$code_type = ''; 
-			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', 'Œﬁ∑®‘§¿¿£°'); 
+			$file_contents = getFileContent( $path ); 
+			$file_contents = iconv( 'gb2312', 'utf-8//IGNORE', $file_contents );
+			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break; 
 	}
-	echo "<h3>$path</h3>"; 
+	$auth = (is_readable("$path/$folder_name")?'R':'-').
+			(is_writeable("$path/$folder_name")?'W':'-').
+			(is_executable("$path/$folder_name")?'E':'-');
+	echo "<h3>$path£®$auth£©</h3>"; 
 	echo "<pre class='brush:$code_type;' >"; 
 	echo $file_contents; 
 	echo '</pre>'; 
