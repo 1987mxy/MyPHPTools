@@ -65,10 +65,14 @@ switch( $action )
 		echo 'wrappers: ', var_dump($w); 
 		exit(); 
 	case 'var':
-		echo '<pre>' . var_export( get_defined_vars() ) . '</pre>';
+		echo '<pre>';
+		var_export( get_defined_vars() );
+		echo '</pre>';
 		break;
 	case 'SERVER':
-		echo '<pre>' . var_export( $_SERVER ) . '</pre>';
+		echo '<pre>';
+		var_export( $_SERVER );
+		echo '</pre>';
 		break;
 	case 'phpinfo':
 		phpinfo();
