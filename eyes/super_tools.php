@@ -71,7 +71,7 @@ switch( $action )
 		echo '<pre>' . var_export( $_SERVER ) . '</pre>';
 		break;
 	case 'phpinfo':
-		phpinfo(); 
+		phpinfo();
 		exit(); 
 		break;
 // 	case 'widget':
@@ -97,8 +97,7 @@ switch( $action )
 // 		}
 // 		echo '</table>'; 
 	case 'tools_file_list':
-		$my_root = dirname( __FILE__ );
-		$tools_file_list = getFileList( $my_root );
+		$tools_file_list = getFileList( './' );
 		echo tb_json_encode( $tools_file_list );
 		break;
 	default: 
