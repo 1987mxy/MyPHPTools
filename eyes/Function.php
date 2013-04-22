@@ -105,8 +105,12 @@ function superDir( $path, $ajax = 0 ) {
 
 	$folder = explode( '/', $path );
 	$folder = array_pop( $folder );
+	$auth = (is_readable($path)?'R':'-').
+			(is_writeable($path)?'W':'-').
+			(is_executable($path)?'E':'-');
+	if( stripos( $_SERVER[ 'HTTP_USER_AGENT' ], 'linux' ) ) $own =  posix_getpwuid( fileowner( $path ) );
 	echo $ajax==0?"<li class='open_folder' >":"";
-	echo "<span onclick='folder(this)' path='$path' >$folder</span>
+	echo "<span title='$own[name] $auth' onclick='folder(this)' path='$path' >$folder</span>
 	<ul class='open_file' >";
 // 	$direct = opendir( $path );
 	$filename_list = array_map( basename, glob( $path . '/*' ) );
@@ -154,8 +158,8 @@ function superDir( $path, $ajax = 0 ) {
 		$li_class = selectIcon( $ext, $ext_dict );
 		$down_file = "$path/$file_name";
 		$auth = (is_readable("$path/$file_name")?'R':'-').
-		(is_writeable("$path/$file_name")?'W':'-').
-		(is_executable("$path/$file_name")?'E':'-');
+				(is_writeable("$path/$file_name")?'W':'-').
+				(is_executable("$path/$file_name")?'E':'-');
 		if( stripos( $_SERVER[ 'HTTP_USER_AGENT' ], 'linux' ) ) $own = posix_getpwuid( fileowner( "$path/$file_name" ) );
 		echo "<li class='$li_class' >
 		<a title='$own[name] $auth' href='javascript:file(\"$path/$file_name\")' >

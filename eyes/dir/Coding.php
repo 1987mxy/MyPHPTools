@@ -93,10 +93,10 @@ if ( isset( $file ) ) {
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break; 
 	}
-	$auth = (is_readable("$path/$folder_name")?'R':'-').
-			(is_writeable("$path/$folder_name")?'W':'-').
-			(is_executable("$path/$folder_name")?'E':'-');
-	echo "<h3>$path£¨$auth£©</h3>"; 
+	$auth = (is_readable($path)?'R':'-').
+			(is_writeable($path)?'W':'-').
+			(is_executable($path)?'E':'-');
+	echo "<h3>$path ($auth ) </h3>"; 
 	echo "<pre class='brush:$code_type;' >"; 
 	echo $file_contents; 
 	echo '</pre>'; 
