@@ -30,14 +30,37 @@ $db -> connect( DB_HOST,
 				DB_CHARSET );
 
 switch( $op ){
+	case 'ajax_get_sql':
+		$sqls = explode(";",$sql);
+		if( empty( $sqls ) ) break;
+		$sql = $sqls[ 0 ];
+		$table_rows = $db -> select( $sql );
+		$return_sql = '';
+		$row_values = array();
+		foreach( $table_rows as $i => $row ){
+			if( count( $row ) > 1 ) exit( 'SQL invalid!' );
+			if( $i == 0 ){
+				$fields = array_keys( $row );
+				$return_sql .= "`$fields[0]` IN ";
+			}
+			$values = array_values( $row );
+			$row_values[] = $values[ 0 ];
+		}
+		$return_sql = $return_sql . '("' . implode( '", "', array_unique( $row_values ) ) . '")';
+		echo $return_sql;
+		break;
 	case 'columns':
 		if( !$table ) break;
 		$table_sql = $database ? 'show full columns from '.$database.'.'.$table : 'show full columns from '.$table;
 		$table_columns = $db -> select($table_sql);
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . '</h3>';
-		echo '<table border="1px" >';
+		echo "<a href='?action=db&op=tables&database=$database' style='float:left' >back</a><br>";
+		echo '<table border="1px" style="float:left;" >';
+		$fields_array = '';
 		foreach ( $table_columns as $i => $col ) {
 			if( empty( $col ) ) continue;
+			$fields_array .= "'$col[Field]'		=> ''," . ( $col[Comment] ? "		//$col[Comment]" : '' ) ."
+";
 			if( $i == 0 ){
 				$th = '<tr>';
 				$td = '<tr>';
@@ -55,6 +78,7 @@ switch( $op ){
 			}
 		}
 		echo '</table>';
+		echo '<textarea cols="50" rows="30" >array( ' . htmlentities( substr( $fields_array, 0, -2 ), ENT_QUOTES ) . ' );</textarea>';
 		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
 		exit();
 		break;
@@ -76,8 +100,15 @@ switch( $op ){
 		}
 
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . ( $select_flag ? '<br>查询 ：' . $table_sql : '' ) . '</h3>';
-		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' ><textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea><br><input name='sql_submit' type='submit' value='running' /></form>";
-
+		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' ><textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea><br><input name='sql_submit' type='submit' value='running' />&nbsp;&nbsp;<input onclick='get_sql()' type='button' value='get_sql' /></form><span id='my_sql'></span><br>";
+		echo '<script type="text/javascript" src="./dir/js/jquery.js"></script>
+				<script type="text/javascript">
+				function get_sql(){
+					$.post("?",{action:"db",op:"ajax_get_sql",sql:$("textarea[name=\"sql\"]").val()},function(sql){
+						$("#my_sql").text(sql);
+					});
+				}
+				</script>';
 		$field_sql = $database ? 'show full columns from '.$database.'.'.$table : 'show full columns from '.$table;
 		$table_fields = $db -> select($field_sql);
 		$field_list = array();
@@ -88,7 +119,7 @@ switch( $op ){
 		if ( !$select_flag ) $table_sql = $database ? 'select `' . join( '`, `', $field_list ) . '` from '.$database.'.'.$table : 'select `' . join( '`, `', $field_list ) . '` from '.$table;
 		$table_rows = $db -> select($table_sql . " limit 0, 30000");
 		echo '<font size="3" color="red" style="font-weight:bolder">'.(count($table_rows)>=30000?'限制3w条记录':count($table_rows)).'</font>';
-		echo "<br><a href='?mod=$mod&file=$file&action=tables&database=$database' >back</a>";
+		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
 		echo '<table border="1px" >';
 		foreach ( $table_rows as $i => $row ) {
 			if( empty( $row ) ) continue;
