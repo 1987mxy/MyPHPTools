@@ -12,6 +12,7 @@ if( file_exists( ROOT . '/include/config.inc.php' ) ){
 	include_once ROOT . '/include/config.inc.php';
 }
 else{
+	echo '<!-- get my sql config -->';
 	define( 'DB_HOST', 'localhost' );
 	define( 'DB_USER', 'root' );
 	define( 'DB_PW', '' );
