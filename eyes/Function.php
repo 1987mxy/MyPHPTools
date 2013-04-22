@@ -62,9 +62,11 @@ if( !function_exists( 'tb_json_convert_encoding' ) ){
 }
 
 function getFileList( $path ){
-	$direct = opendir( $path );
+// 	$direct = opendir( $path );
+	$filename_list = array_map( basename, glob( $path . '/*' ) );
 	$file_list = array( 'folder' => array(), 'file' => array() );
-	while( False !== ( $filename = readdir( $direct ) ) ) {
+// 	while( False !== ( $filename = readdir( $direct ) ) ) {
+	foreach( $filename_list as $filename ) {
 		if( $filename == '.' || $filename == '..' ) continue;
 		$full_path = "$path/$filename";
 		if( is_dir( $full_path ) ) {
@@ -106,8 +108,10 @@ function superDir( $path, $ajax = 0 ) {
 	echo $ajax==0?"<li class='open_folder' >":"";
 	echo "<span onclick='folder(this)' path='$path' >$folder</span>
 	<ul class='open_file' >";
-	$direct = opendir( $path );
-	while( False !== ( $filename = readdir( $direct ) ) ) {
+// 	$direct = opendir( $path );
+	$filename_list = array_map( basename, glob( $path . '/*' ) );
+// 	while( False !== ( $filename = readdir( $direct ) ) ) {
+	foreach( $filename_list as $filename ) {
 		if( $filename == '.' || $filename == '..' ) continue;
 		$filename = iconv( 'gb2312', 'utf-8', $filename );
 		if( is_dir( "$path/$filename" ) ) {
