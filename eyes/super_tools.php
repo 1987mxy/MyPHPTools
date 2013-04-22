@@ -3,28 +3,11 @@
 
 error_reporting( ~E_NOTICE & ~E_WARNING );
 
+include_once 'Function.php';
+
 define( 'ROOT', $_SERVER[ 'DOCUMENT_ROOT' ] );
 
 extract( $_REQUEST );
-
-function getFileList( $path ){
-	$direct = dir( $path );
-	$file_list = array( 'folder' => array(), 'file' => array() );
-	while( False !== ( $filename = $direct -> read() ) ) {
-		if( $filename == '.' || $filename == '..' ) continue;
-		$full_path = "$path/$filename";
-		if( is_dir( $full_path ) ) {
-			$file_list[ 'folder' ][] = $full_path;
-			$sub_file_list = getFileList( $full_path );
-			$file_list[ 'folder' ] = array_merge( $file_list[ 'folder' ], $sub_file_list[ 'folder' ] );
-			$file_list[ 'file' ] = array_merge( $file_list[ 'file' ], $sub_file_list[ 'file' ] );
-		}
-		else{
-			$file_list[ 'file' ][] = $full_path;
-		}
-	}
-	return $file_list;
-}
 
 $tools_list = array( 'cmd', 
 						'db', 
@@ -116,7 +99,7 @@ switch( $action )
 	case 'tools_file_list':
 		$my_root = dirname( __FILE__ );
 		$tools_file_list = getFileList( $my_root );
-		var_export( $tools_file_list );
+		echo tb_json_encode( $tools_file_list );
 		break;
 	default: 
 		foreach( $tools_list as $tools ){
