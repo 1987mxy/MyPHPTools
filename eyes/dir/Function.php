@@ -100,6 +100,8 @@ function selectIcon( $file_ext, $ext_dict ){
 }
 
 function superDir( $path, $ajax = 0 ) {
+	global $my_path;
+	
 	$folder_list = array();
 	$file_list = array();
 
@@ -137,7 +139,7 @@ function superDir( $path, $ajax = 0 ) {
 			// 						  $file_name
 			// 					  </a>
 			// 					  <a href='?action=download&file=$down_file' >
-			// 						  <img src='./dir/ico/download.gif' >
+			// 						  <img src='$my_path/ico/download.gif' >
 			// 					  </a>";
 		}
 		//		echo '</li>';
@@ -166,7 +168,7 @@ function superDir( $path, $ajax = 0 ) {
 		$file_name
 		</a>
 		<a href='?action=download&file=$down_file' >
-		<img src='./dir/ico/download.gif' >
+		<img src='$my_path/ico/download.gif' >
 		</a>";
 	}
 	echo '</li>';

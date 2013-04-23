@@ -3,10 +3,18 @@
 if( !defined( 'ROOT' ) ){
 	define( 'ROOT', $_SERVER[ 'DOCUMENT_ROOT' ] );
 	extract( $_REQUEST );
+	$my_path = './';
+}
+else{
+	$my_path = './dir/';
 }
 
-
 include_once 'db_mysql.class.php';
+
+if( !defined( 'ROOT' ) ){
+	define( 'ROOT', $_SERVER[ 'DOCUMENT_ROOT' ] );
+	extract( $_REQUEST );
+}
 
 if( file_exists( ROOT . '/include/config.inc.php' ) ){
 	include_once ROOT . '/include/config.inc.php';
@@ -31,15 +39,14 @@ $db -> connect( DB_HOST,
 				DB_CHARSET );
 
 switch( $op ){
-	case 'ajax_get_sql':
+	case 'ajax_get_where':
 		$sqls = explode(";",$sql);
-		if( empty( $sqls ) ) break;
-		$sql = $sqls[ 0 ];
-		$table_rows = $db -> select( $sql );
+		$sql = empty( $sqls ) ? '' : $sqls[ 0 ];
+		$table_rows = stristr( $sql, 'select' ) ? $db -> select( $sql ) : $db -> select( "SELECT * FROM `$database`.`$table`" );
+		if( empty( $table_rows ) ) exit( 'NULL' );
 		$return_sql = '';
 		$row_values = array();
 		foreach( $table_rows as $i => $row ){
-			if( count( $row ) > 1 ) exit( 'SQL invalid!' );
 			if( $i == 0 ){
 				$fields = array_keys( $row );
 				$return_sql .= "`$fields[0]` IN ";
@@ -50,18 +57,53 @@ switch( $op ){
 		$return_sql = $return_sql . '("' . implode( '", "', array_unique( $row_values ) ) . '")';
 		echo $return_sql;
 		break;
+	case 'ajax_get_tdata':
+		$sqls = explode(";",$sql);
+		$sql = empty( $sqls ) ? '' : $sqls[ 0 ];
+		if( stristr( $sql, 'select' ) && !stristr( $sql, ' join ' ) ){
+			$table_rows = $db -> select( $sql );
+			preg_match( '/from +`?([^.`]+)`?\.?`?([^ `]*)`?/i', $sql, $tables );
+			$database = $tables[ 2 ] ? $tables[ 1 ] : $database;
+			$table = $tables[ 2 ] ? $tables[ 2 ] : $tables[ 1 ];
+		}
+		else{
+			$table_rows = $db -> select( "SELECT * FROM `$database`.`$table`" );
+		}
+		if( empty( $table_rows ) ) exit( 'NULL' );
+		$key = $db -> get_one( "SHOW COLUMNS FROM `$database`.`$table` WHERE `Key`='PRI'" );
+		$key = $key[ 'Field' ];
+		$return_sql = '';
+		foreach( $table_rows as $i => $row ){
+			if( empty( $row ) ) continue;
+			if( $key ) unset( $row[ $key ] );
+			if( $i == 0 ){
+				$return_sql .= "INSERT INTO `$table`(`" . implode( '`,`', array_keys( $row ) ) . "`) VALUES
+";
+			}
+			$return_sql .= "('" . implode( "','", array_map( $db -> escape, array_values( $row ) ) ) . "'),
+";
+		}
+		header ( "Content-type: text/html; charset=gbk" );
+		echo substr( $return_sql, 0, -3 ) , ';';
+		break;
 	case 'columns':
 		if( !$table ) break;
-		$table_sql = $database ? 'show full columns from '.$database.'.'.$table : 'show full columns from '.$table;
+		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js" ></script>';
+		$table_sql = $database ? 'show full columns from `'.$database.'`.`'.$table . '`' : 'show full columns from `'.$table . '`';
 		$table_columns = $db -> select($table_sql);
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . '</h3>';
-		echo "<a href='?action=db&op=tables&database=$database' style='float:left' >back</a><br>";
-		echo '<table border="1px" style="float:left;" >';
+		echo "<a href='?action=db&op=tables&database=$database' >back</a>
+				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' >
+				<input onclick='$(\".data\").hide();$(\".array\").show();' type='button' value='array' >
+				<input onclick='$(\".data\").hide();$(\".sql\").show();' type='button' value='sql' >";
+		echo '<div class="data table"><table border="1px" >';
 		$fields_array = '';
+		$fields_sql = array();
 		foreach ( $table_columns as $i => $col ) {
 			if( empty( $col ) ) continue;
 			$fields_array .= "'$col[Field]'		=> ''," . ( $col[Comment] ? "		//$col[Comment]" : '' ) ."
-";
+	";
+			$fields_sql[] = "`$col[Field]`";
 			if( $i == 0 ){
 				$th = '<tr>';
 				$td = '<tr>';
@@ -78,8 +120,10 @@ switch( $op ){
 				echo '</td></tr>';
 			}
 		}
-		echo '</table>';
-		echo '<textarea cols="50" rows="30" >array( ' . htmlentities( substr( $fields_array, 0, -2 ), ENT_QUOTES ) . ' );</textarea>';
+		echo '</table></div>';
+		echo '<div class="data array" style="display:none;" ><pre>array( ' . substr( $fields_array, 0, -3 ) . ' );</pre></div>';
+		echo '<div class="data sql" style="display:none;" ><pre>' . implode( ',
+', $fields_sql ) . '</pre></div>';
 		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
 		exit();
 		break;
@@ -101,12 +145,24 @@ switch( $op ){
 		}
 
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . ( $select_flag ? '<br>查询 ：' . $table_sql : '' ) . '</h3>';
-		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' ><textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea><br><input name='sql_submit' type='submit' value='running' />&nbsp;&nbsp;<input onclick='get_sql()' type='button' value='get_sql' /></form><span id='my_sql'></span><br>";
-		echo '<script type="text/javascript" src="./dir/js/jquery.js"></script>
+		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' >
+				<textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea>
+				<input name='sql_submit' type='submit' value='running' />
+				</form>";
+		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js"></script>
 				<script type="text/javascript">
-				function get_sql(){
-					$.post("?",{action:"db",op:"ajax_get_sql",sql:$("textarea[name=\"sql\"]").val()},function(sql){
-						$("#my_sql").text(sql);
+				function get_where(){
+					$.post("?",{action:"db",op:"ajax_get_where",database:"' . ( $database ? $database : $db->dbname ) . '",table:"' . $table . '",sql:$("textarea[name=\"sql\"]").val()},function(where){
+						$(".where pre").text(where);
+						$(".data").hide();
+						$(".where").show();
+					});
+				}
+				function get_tdata(){
+					$.post("?",{action:"db",op:"ajax_get_tdata",database:"' . ( $database ? $database : $db->dbname ) . '",table:"' . $table . '",sql:$("textarea[name=\"sql\"]").val()},function(tdata){
+						$(".tdata pre").text(tdata);
+						$(".data").hide();
+						$(".tdata").show();
 					});
 				}
 				</script>';
@@ -119,9 +175,12 @@ switch( $op ){
 	
 		if ( !$select_flag ) $table_sql = $database ? 'select `' . join( '`, `', $field_list ) . '` from '.$database.'.'.$table : 'select `' . join( '`, `', $field_list ) . '` from '.$table;
 		$table_rows = $db -> select($table_sql . " limit 0, 30000");
-		echo '<font size="3" color="red" style="font-weight:bolder">'.(count($table_rows)>=30000?'限制3w条记录':count($table_rows)).'</font>';
-		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
-		echo '<table border="1px" >';
+		echo '<font size="3" color="red" style="font-weight:bolder">'.(count($table_rows)>=30000?'限制3w条记录':count($table_rows)).'</font><br>';
+		echo "<a href='?action=db&op=tables&database=$database' >back</a>
+				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' />
+				<input onclick='get_where()' type='button' value='where' />
+				<input onclick='get_tdata()' type='button' value='data' />";
+		echo '<div class="data table" ><table border="1px" >';
 		foreach ( $table_rows as $i => $row ) {
 			if( empty( $row ) ) continue;
 			if( $i == 0 ){
@@ -140,7 +199,9 @@ switch( $op ){
 				echo '</td></tr>';
 			}
 		}
-		echo '</table>';
+		echo '</table></div>';
+		echo '<div class="data where" style="display:none;" ><pre></pre></div>';
+		echo '<div class="data tdata" style="display:none;" ><pre></pre></div>';
 		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
 		exit();
 		break;

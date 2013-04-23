@@ -1,44 +1,54 @@
 <?php 
+
+if( !defined( 'ROOT' ) ){
+	define( 'ROOT', $_SERVER[ 'DOCUMENT_ROOT' ] );
+	extract( $_REQUEST );
+	$my_path = './';
+}
+else{
+	$my_path = './dir/';
+}
+
 if ( !isset( $ajax ) ) { 
 	$ajax = 0; 
 ?>
 
 <style>
 	.js {
-		background:url(./dir/ico/js.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/js.gif) no-repeat; 
 	}
 	.php {
-		background:url(./dir/ico/php.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/php.gif) no-repeat; 
 	}
 	.css {
-		background:url(./dir/ico/css.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/css.gif) no-repeat; 
 	}
 	.html {
-		background:url(./dir/ico/html.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/html.gif) no-repeat; 
 	}
 	.image {
-		background:url(./dir/ico/image.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/image.gif) no-repeat; 
 	}
 	.py {
-		background:url(./dir/ico/python.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/python.gif) no-repeat; 
 	}
 	.sql {
-		background:url(./dir/ico/sql.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/sql.gif) no-repeat; 
 	}
 	.sh {
-		background:url(./dir/ico/file.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/file.gif) no-repeat; 
 	}
 	.text {
-		background:url(./dir/ico/file.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/file.gif) no-repeat; 
 	}
 	.file {
-		background:url(./dir/ico/file.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/file.gif) no-repeat; 
 	}
 	.open_folder {
-		background:url(./dir/ico/open_folder.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/open_folder.gif) no-repeat; 
 	}
 	.close_folder {
-		background:url(./dir/ico/close_folder.gif) no-repeat; 
+		background:url(<?php echo $my_path;?>ico/close_folder.gif) no-repeat; 
 	}
 	
 	.open_file {
@@ -60,7 +70,7 @@ if ( !isset( $ajax ) ) {
 </style>
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<script type="text/javascript" src="./dir/js/jquery.js" ></script>
+<script type="text/javascript" src="<?php echo $my_path;?>js/jquery.js" ></script>
 
 <script type="text/javascript" >
 	function folder( obj ){ 
@@ -81,7 +91,7 @@ if ( !isset( $ajax ) ) {
 	}
 
 	function file( path ){ 
-		$( '#file_content' ).attr( 'src', "./dir/Coding.php?file=1&path="+path ); 
+		$( '#file_content' ).attr( 'src', "<?php echo $my_path;?>Coding.php?file=1&path="+path ); 
 	}
 </script>
 <?php 
@@ -93,10 +103,7 @@ if ( !isset( $ajax ) ) {
 include_once 'Config.php';
 include_once 'Function.php';
 
-if( !defined( 'ROOT' ) ){
-	define( 'ROOT', $_SERVER[ 'DOCUMENT_ROOT' ] );
-	extract( $_REQUEST );
-}
+
 
 echo $ajax==0?'<div style="float:left; width:25%; height:100%; overFlow:scroll; " >':''; 
 superDir( ( isset( $path )?$path:ROOT ), $ajax ); 
