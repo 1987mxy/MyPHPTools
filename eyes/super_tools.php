@@ -117,4 +117,6 @@ switch( $action )
 		}
 		break; 
 }
+
+exit();
 ?>

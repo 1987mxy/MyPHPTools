@@ -92,7 +92,7 @@ switch( $op ){
 		$table_sql = $database ? 'show full columns from `'.$database.'`.`'.$table . '`' : 'show full columns from `'.$table . '`';
 		$table_columns = $db -> select($table_sql);
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . '</h3>';
-		echo "<a href='?action=db&op=tables&database=$database' >back</a>
+		echo "<a href='?action=db&op=tables&database=$database#$table' >back</a>
 				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' >
 				<input onclick='$(\".data\").hide();$(\".array\").show();' type='button' value='array' >
 				<input onclick='$(\".data\").hide();$(\".sql\").show();' type='button' value='sql' >";
@@ -124,7 +124,7 @@ switch( $op ){
 		echo '<div class="data array" style="display:none;" ><pre>array( ' . substr( $fields_array, 0, -3 ) . ' );</pre></div>';
 		echo '<div class="data sql" style="display:none;" ><pre>' . implode( ',
 ', $fields_sql ) . '</pre></div>';
-		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
+		echo "<br><a href='?action=db&op=tables&database=$database#$table' >back</a>";
 		exit();
 		break;
 	case 'table_data':
@@ -176,7 +176,7 @@ switch( $op ){
 		if ( !$select_flag ) $table_sql = $database ? 'select `' . join( '`, `', $field_list ) . '` from '.$database.'.'.$table : 'select `' . join( '`, `', $field_list ) . '` from '.$table;
 		$table_rows = $db -> select($table_sql . " limit 0, 30000");
 		echo '<font size="3" color="red" style="font-weight:bolder">'.(count($table_rows)>=30000?'限制3w条记录':count($table_rows)).'</font><br>';
-		echo "<a href='?action=db&op=tables&database=$database' >back</a>
+		echo "<a href='?action=db&op=tables&database=$database#$table' >back</a>
 				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' />
 				<input onclick='get_where()' type='button' value='where' />
 				<input onclick='get_tdata()' type='button' value='data' />";
@@ -202,7 +202,7 @@ switch( $op ){
 		echo '</table></div>';
 		echo '<div class="data where" style="display:none;" ><pre></pre></div>';
 		echo '<div class="data tdata" style="display:none;" ><pre></pre></div>';
-		echo "<br><a href='?action=db&op=tables&database=$database' >back</a>";
+		echo "<br><a href='?action=db&op=tables&database=$database#$table' >back</a>";
 		exit();
 		break;
 	default:
@@ -228,7 +228,8 @@ switch( $op ){
 				echo '<tr>';
 				foreach ( $tab as $attr_name => $attr ) {
 					echo "<td>".( $attr_name == $field_fields[0] ? "<a href='?action=db&op=columns&table=$attr&database=$database' >" : '' ).$attr.( $attr_name == $field_fields[0] ? "</a>" : '' );
-					echo '&nbsp;&nbsp;' . ( $attr_name == $field_fields[0] ? "<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' )."</td>";
+					echo '&nbsp;&nbsp;' . ( $attr_name == $field_fields[0] ? "<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' );
+					echo "<a name='$attr'></a>"."</td>";
 				}
 				echo '</tr>';
 			}
