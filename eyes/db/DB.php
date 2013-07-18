@@ -19,6 +19,16 @@ if( !defined( 'ROOT' ) ){
 if( file_exists( ROOT . '/include/config.inc.php' ) ){
 	include_once ROOT . '/include/config.inc.php';
 }
+elseif( file_exists( ROOT . '/config.php' ) ){
+	include_once ROOT . '/config.php';
+	define( 'DB_HOST', $db_config["db"]["host"] );
+	define( 'DB_USER', $db_config["db"]["user"] );
+	define( 'DB_PW', $db_config["db"]["pass"] );
+	define( 'DB_NAME', $db_config["db"]["database"] );
+	define( 'DB_PRE', '' );
+	define( 'DB_CHARSET', $db_config["db"]["charset"] );
+	define( 'DB_PCONNECT', 0 );
+}
 else{
 	echo '<!-- get my sql config -->';
 	define( 'DB_HOST', 'localhost' );
@@ -88,6 +98,8 @@ switch( $op ){
 		break;
 	case 'columns':
 		if( !$table ) break;
+		
+		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
 		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js" ></script>';
 		$table_sql = $database ? 'show full columns from `'.$database.'`.`'.$table . '`' : 'show full columns from `'.$table . '`';
 		$table_columns = $db -> select($table_sql);
@@ -144,6 +156,7 @@ switch( $op ){
 			}
 		}
 
+		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . ( $select_flag ? '<br>≤È—Ø £∫' . $table_sql : '' ) . '</h3>';
 		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' >
 				<textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea>
@@ -206,12 +219,39 @@ switch( $op ){
 		exit();
 		break;
 	default:
-		$db_sql = $database ? 'show full tables from '.$database : 'show full tables';
+		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
+		$db_sql = ( $database ? 'show table status from '.$database : 'show table status' ) . ' where Engine is not null';
 		$db_tables = $db -> select($db_sql);
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '</h3>';
+		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js"></script>';
+		echo "<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' />
+				<input onclick='$(\".data\").hide();$(\".dump\").show();' type='button' value='dump' />
+				<input onclick='$(\".data\").hide();$(\".rollback\").show();' type='button' value='rollback' />";
+		if( $_SERVER['SERVER_ADDR'] != $_SERVER['REMOTE_ADDR'] ){
+			$priv_sql = "select `user`.`User`
+						from `mysql`.`user` as `user`
+						left join `mysql`.`db` as `db` on `db`.`User`=`user`.`User`
+						where `db`.`Db`='" . ($database ? $database : $db->dbname) . "' and
+								`db`.`Host`='%' and
+								`db`.`Select_priv`='Y' and
+								`db`.`Lock_tables_priv`='Y' and
+								`user`.`Host`='%'
+						order by `user`.`Password`";
+			$dump_user = $db -> get_one( $priv_sql );
+			if( !empty( $dump_user ) ){
+				$dump_command = array( "mysqldump -u " . $dump_user['User'] . " -h " . $_SERVER['SERVER_ADDR'] . " -p " . ($database ? $database : $db->dbname) . " ", '',"--result-file=" . ($database ? $database : $db->dbname) . "_db_" . $_SERVER['SERVER_ADDR'] . ".sql" );
+				$rollback_command = "mysql -u root -p --default-character-set=" . DB_CHARSET . " " . ($database ? $database : $db->dbname) . "<" . ($database ? $database : $db->dbname) . "_db_" . $_SERVER['SERVER_ADDR'] . ".sql";
+			}
+		}
+		else{
+			$dump_command = array( "mysqldump -u " . DB_USER . " -h " . DB_HOST . " -p " . ($database ? $database : $db->dbname) . " ", '',"--result-file=" . ($database ? $database : $db->dbname) . "_db.sql" );
+			$rollback_command = "mysql -u root -p --default-character-set=" . DB_CHARSET . " " . ($database ? $database : $db->dbname) . "<" . ($database ? $database : $db->dbname) . "_db.sql";
+		}
+		echo '<div class="data table" >';
 		echo '<table border="1px" >';
 		foreach ( $db_tables as $i => $tab ) {
 			if( empty( $tab ) ) continue;
+			if( !empty( $dump_command ) ) $dump_command[ 1 ] .= $tab[ 'Name' ] . ' ';
 			$field_fields = array_keys( $tab );
 			if( $i == 0 ){
 				$th = '<tr>';
@@ -235,6 +275,9 @@ switch( $op ){
 			}
 		}
 		echo '</table>';
+		echo '</div>';
+		echo '<div class="data dump" style="display:none;" ><textarea style="width:100%;height:100%" >' . stripslashes( implode( '', $dump_command ) ) . '</textarea></div>';
+		echo '<div class="data rollback" style="display:none;" ><textarea style="width:100%;height:100%" >' . stripslashes( $rollback_command ) . '</textarea></div>';
 }
 
 ?>
