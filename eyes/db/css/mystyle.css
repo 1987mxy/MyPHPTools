@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+
+#console {position:fixed;top:0;left:0;width:100%;background-color:white;z-index:1;}
+
+.data {position:absolute;width:100%;}
+
+.search_keyword {background:red;color:white;}
+
+.search_keyword.search_selected {background:blue;color:white;}

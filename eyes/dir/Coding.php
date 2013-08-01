@@ -78,7 +78,7 @@ if ( isset( $file ) ) {
 			$file_contents = htmlentities( $file_contents, ENT_QUOTES, 'utf-8' );
 			break;
 		case 'image':
-			$root_len = strlen( $_SERVER['DOCUMENT_ROOT'] ) - 1;
+			$root_len = strlen( $_SERVER['DOCUMENT_ROOT'] );
 			$image_url = substr( $path, $root_len );
 			exit( "<img src='$image_url' />" );
 			break;

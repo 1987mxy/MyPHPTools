@@ -6,7 +6,7 @@ if( !defined( 'ROOT' ) ){
 	$my_path = './';
 }
 else{
-	$my_path = './dir/';
+	$my_path = './db/';
 }
 
 include_once 'db_mysql.class.php';
@@ -101,13 +101,19 @@ switch( $op ){
 		
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
 		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js" ></script>';
+		echo '<script type="text/javascript" src="' . $my_path . 'js/myfunc.js"></script>';
+		echo '<link rel="stylesheet" type="text/css" href="' . $my_path . 'css/mystyle.css" />';
 		$table_sql = $database ? 'show full columns from `'.$database.'`.`'.$table . '`' : 'show full columns from `'.$table . '`';
 		$table_columns = $db -> select($table_sql);
+		
+		echo '<div id="console" >';
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . '</h3>';
-		echo "<a href='?action=db&op=tables&database=$database#$table' >back</a>
+		echo "<a href='?action=db&op=tables&database=$database&anchor=$table' >back</a>
 				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' >
 				<input onclick='$(\".data\").hide();$(\".array\").show();' type='button' value='array' >
 				<input onclick='$(\".data\").hide();$(\".sql\").show();' type='button' value='sql' >";
+		echo '</div>';
+		
 		echo '<div class="data table"><table border="1px" >';
 		$fields_array = '';
 		$fields_sql = array();
@@ -136,7 +142,6 @@ switch( $op ){
 		echo '<div class="data array" style="display:none;" ><pre>array( ' . substr( $fields_array, 0, -3 ) . ' );</pre></div>';
 		echo '<div class="data sql" style="display:none;" ><pre>' . implode( ',
 ', $fields_sql ) . '</pre></div>';
-		echo "<br><a href='?action=db&op=tables&database=$database#$table' >back</a>";
 		exit();
 		break;
 	case 'table_data':
@@ -157,28 +162,17 @@ switch( $op ){
 		}
 
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
+		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js"></script>';
+		echo '<script type="text/javascript" src="' . $my_path . 'js/myfunc.js"></script>';
+		echo '<link rel="stylesheet" type="text/css" href="' . $my_path . 'css/mystyle.css" />';
+		
+		echo '<div id="console" >';
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . ( $select_flag ? '<br>查询 ：' . $table_sql : '' ) . '</h3>';
 		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' >
 				<textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea>
 				<input name='sql_submit' type='submit' value='running' />
 				</form>";
-		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js"></script>
-				<script type="text/javascript">
-				function get_where(){
-					$.post("?",{action:"db",op:"ajax_get_where",database:"' . ( $database ? $database : $db->dbname ) . '",table:"' . $table . '",sql:$("textarea[name=\"sql\"]").val()},function(where){
-						$(".where pre").text(where);
-						$(".data").hide();
-						$(".where").show();
-					});
-				}
-				function get_tdata(){
-					$.post("?",{action:"db",op:"ajax_get_tdata",database:"' . ( $database ? $database : $db->dbname ) . '",table:"' . $table . '",sql:$("textarea[name=\"sql\"]").val()},function(tdata){
-						$(".tdata pre").text(tdata);
-						$(".data").hide();
-						$(".tdata").show();
-					});
-				}
-				</script>';
+		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'></span></p>";
 		$field_sql = $database ? 'show full columns from '.$database.'.'.$table : 'show full columns from '.$table;
 		$table_fields = $db -> select($field_sql);
 		$field_list = array();
@@ -189,10 +183,12 @@ switch( $op ){
 		if ( !$select_flag ) $table_sql = $database ? 'select `' . join( '`, `', $field_list ) . '` from '.$database.'.'.$table : 'select `' . join( '`, `', $field_list ) . '` from '.$table;
 		$table_rows = $db -> select($table_sql . " limit 0, 30000");
 		echo '<font size="3" color="red" style="font-weight:bolder">'.(count($table_rows)>=30000?'限制3w条记录':count($table_rows)).'</font><br>';
-		echo "<a href='?action=db&op=tables&database=$database#$table' >back</a>
-				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' />
+		echo "<a href='?action=db&op=tables&database=$database&anchor=$table' >back</a>
+				<input onclick='showLayer(this);' type='button' value='table' />
 				<input onclick='get_where()' type='button' value='where' />
 				<input onclick='get_tdata()' type='button' value='data' />";
+		echo '</div>';
+		
 		echo '<div class="data table" ><table border="1px" >';
 		foreach ( $table_rows as $i => $row ) {
 			if( empty( $row ) ) continue;
@@ -215,18 +211,23 @@ switch( $op ){
 		echo '</table></div>';
 		echo '<div class="data where" style="display:none;" ><pre></pre></div>';
 		echo '<div class="data tdata" style="display:none;" ><pre></pre></div>';
-		echo "<br><a href='?action=db&op=tables&database=$database#$table' >back</a>";
 		exit();
 		break;
 	default:
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=' . DB_CHARSET . '" />';
 		$db_sql = ( $database ? 'show table status from '.$database : 'show table status' ) . ' where Engine is not null';
 		$db_tables = $db -> select($db_sql);
-		echo '<h3>' . ( $database ? $database : $db->dbname ) . '</h3>';
 		echo '<script type="text/javascript" src="' . $my_path . 'js/jquery.js"></script>';
-		echo "<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' />
-				<input onclick='$(\".data\").hide();$(\".dump\").show();' type='button' value='dump' />
-				<input onclick='$(\".data\").hide();$(\".rollback\").show();' type='button' value='rollback' />";
+		echo '<script type="text/javascript" src="' . $my_path . 'js/myfunc.js"></script>';
+		echo '<link rel="stylesheet" type="text/css" href="' . $my_path . 'css/mystyle.css" />';
+		
+		if( isset( $anchor ) ) echo "<span id='anchor' anchor='$anchor' ></span>";
+		echo '<div id="console" >';
+		echo '<h3>' . ( $database ? $database : $db->dbname ) . '</h3>';
+		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'></span></p>";
+		echo "<input onclick='showLayer(this);' type='button' value='table' />
+				<input onclick='showLayer(this);' type='button' value='dump' />
+				<input onclick='showLayer(this);' type='button' value='rollback' />";
 		if( $_SERVER['SERVER_ADDR'] != $_SERVER['REMOTE_ADDR'] ){
 			$priv_sql = "select `user`.`User`
 						from `mysql`.`user` as `user`
@@ -247,6 +248,8 @@ switch( $op ){
 			$dump_command = array( "mysqldump -u " . DB_USER . " -h " . DB_HOST . " -p " . ($database ? $database : $db->dbname) . " ", '',"--result-file=" . ($database ? $database : $db->dbname) . "_db.sql" );
 			$rollback_command = "mysql -u root -p --default-character-set=" . DB_CHARSET . " " . ($database ? $database : $db->dbname) . "<" . ($database ? $database : $db->dbname) . "_db.sql";
 		}
+		echo '</div>';
+		
 		echo '<div class="data table" >';
 		echo '<table border="1px" >';
 		foreach ( $db_tables as $i => $tab ) {
@@ -255,21 +258,21 @@ switch( $op ){
 			$field_fields = array_keys( $tab );
 			if( $i == 0 ){
 				$th = '<tr>';
-				$td = '<tr>';
+				$td = '<tr table="'.$tab[$field_fields[0]].'" >';
 				foreach ( $tab as $attr_name => $attr ) {
 					$th .= "<th>$attr_name</th>";
-					$td .= "<td>".( $attr_name == $field_fields[0] ? "<a href='?action=db&op=columns&table=$attr&database=$database' >" : '' ).$attr.( $attr_name == $field_fields[0] ? "</a>" : '' );
-					$td .= '&nbsp;&nbsp;' . ( $attr_name == $field_fields[0] ? "<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' )."</td>";
+					$td .= '<td>'.( $attr_name == $field_fields[0] ? "<a name='$attr' href='?action=db&op=columns&table=$attr&database=$database' >" : '' ).$attr.( $attr_name == $field_fields[0] ? "</a>" : '' );
+					$td .= ( $attr_name == $field_fields[0] ? "&nbsp;&nbsp;<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' )."</td>";
 				}
 				echo $th.'</tr>';
 				echo $td.'</tr>';
 			}
 			else{
-				echo '<tr>';
+				echo '<tr table="'.$tab[$field_fields[0]].'" >';
 				foreach ( $tab as $attr_name => $attr ) {
-					echo "<td>".( $attr_name == $field_fields[0] ? "<a href='?action=db&op=columns&table=$attr&database=$database' >" : '' ).$attr.( $attr_name == $field_fields[0] ? "</a>" : '' );
-					echo '&nbsp;&nbsp;' . ( $attr_name == $field_fields[0] ? "<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' );
-					echo "<a name='$attr'></a>"."</td>";
+					echo "<td>".( $attr_name == $field_fields[0] ? "<a name='$attr' href='?action=db&op=columns&table=$attr&database=$database' >" : '' ).$attr.( $attr_name == $field_fields[0] ? "</a>" : '' );
+					echo ( $attr_name == $field_fields[0] ? "&nbsp;&nbsp;<a href='?action=db&op=table_data&table=$attr&database=$database' >data</a>" : '' );
+					echo "</td>";
 				}
 				echo '</tr>';
 			}

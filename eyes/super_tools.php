@@ -1,7 +1,9 @@
 <?php
 //require_once '../include/common.inc.php'; 
 
-error_reporting( ~E_NOTICE & ~E_WARNING );
+error_reporting( E_ERROR );
+
+include '../include/common.inc.php';
 
 include_once 'Function.php';
 
@@ -18,7 +20,8 @@ $tools_list = array( 'cmd',
 						'SERVER',
 						'phpinfo',
 						'tools_file_list',
-						'tools_list' );
+						'tools_list',
+						'test' );
 
 if( empty( $action ) ) $action = 'tools_list';
 else if( $action && !in_array( $action, $tools_list ) ) exit( 'Access Deny!' );
@@ -110,6 +113,11 @@ switch( $action )
 	case 'tools_file_list':
 		$tools_file_list = getFileList( './' );
 		echo tb_json_encode( $tools_file_list );
+		break;
+	case 'test':
+		echo '<pre>';
+		print_r( $CATEGORY );
+		echo '</pre>';
 		break;
 	default: 
 		foreach( $tools_list as $tools ){
