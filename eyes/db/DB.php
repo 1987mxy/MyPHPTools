@@ -107,7 +107,7 @@ switch( $op ){
 		$table_columns = $db -> select($table_sql);
 		
 		echo '<div id="console" >';
-		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . '</h3>';
+		echo '<h3><span id="db" >' . ( $database ? $database : $db->dbname ) . '</span>.<span id="table" >' . $table . '</span></h3>';
 		echo "<a href='?action=db&op=tables&database=$database&anchor=$table' >back</a>
 				<input onclick='$(\".data\").hide();$(\".table\").show();' type='button' value='table' >
 				<input onclick='$(\".data\").hide();$(\".array\").show();' type='button' value='array' >
@@ -167,12 +167,12 @@ switch( $op ){
 		echo '<link rel="stylesheet" type="text/css" href="' . $my_path . 'css/mystyle.css" />';
 		
 		echo '<div id="console" >';
-		echo '<h3>' . ( $database ? $database : $db->dbname ) . '.' . $table . ( $select_flag ? '<br>≤È—Ø £∫' . $table_sql : '' ) . '</h3>';
+		echo '<h3><span id="db" >' . ( $database ? $database : $db->dbname ) . '</span>.<span id="table" >' . $table . '</span>' . ( $select_flag ? '<br>≤È—Ø £∫' . $table_sql : '' ) . '</h3>';
 		echo "<form action='?$_SERVER[QUERY_STRING]' method='post' >
 				<textarea name='sql' cols='100' rows='5' >" . stripslashes($sql) . "</textarea>
 				<input name='sql_submit' type='submit' value='running' />
 				</form>";
-		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'></span></p>";
+		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'><img src='" . $my_path . "img/loading.gif'><a id='search_prev' class='disabled' onclick='prevK();' >Prev</a>&nbsp;&nbsp;<a id='search_next' class='disabled' onclick='nextK();' >Next</a></span></p>";
 		$field_sql = $database ? 'show full columns from '.$database.'.'.$table : 'show full columns from '.$table;
 		$table_fields = $db -> select($field_sql);
 		$field_list = array();
@@ -224,7 +224,7 @@ switch( $op ){
 		if( isset( $anchor ) ) echo "<span id='anchor' anchor='$anchor' ></span>";
 		echo '<div id="console" >';
 		echo '<h3>' . ( $database ? $database : $db->dbname ) . '</h3>';
-		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'></span></p>";
+		echo "<p>search:&nbsp;&nbsp;<input onkeyup='search(this,event);' autocomplete='off' />&nbsp;&nbsp;<span id='search_op'><img src='" . $my_path . "img/loading.gif'><a id='search_prev' class='disabled' onclick='prevK();' >Prev</a>&nbsp;&nbsp;<a id='search_next' class='disabled' onclick='nextK();' >Next</a></span></p>";
 		echo "<input onclick='showLayer(this);' type='button' value='table' />
 				<input onclick='showLayer(this);' type='button' value='dump' />
 				<input onclick='showLayer(this);' type='button' value='rollback' />";
